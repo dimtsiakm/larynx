@@ -8,4 +8,7 @@ setup(
     description='A medical imaging segmentation using DECT dataset',
     author='Dimitris Tsiakmakis',
     license='MIT',
+    install_requires=[
+        '',
+    ],
 )
