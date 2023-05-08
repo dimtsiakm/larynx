@@ -1,24 +1,15 @@
 import glob
 import os
 import sys
-import SimpleITK as sitk  # noqa: N813
 import numpy as np
 import logging
 
-# import itk
+import SimpleITK as sitk  # noqa: N813
 from monai.transforms import SaveImage
-from monai.visualize import matshow3d
-from monai.data import PILReader
-from monai.data import CacheDataset, DataLoader, Dataset
-from monai.utils import first, set_determinism# import itk
-from monai.transforms import SaveImage
-from monai.visualize import matshow3d
-from monai.data import PILReader
 from monai.data import CacheDataset, DataLoader, Dataset
 from monai.utils import first, set_determinism
-from monai.transforms import LoadImage
 
-from larynx.data.transforms import get_transforms
+from larynx.data.transforms import get_transforms, transform_png
 from larynx.utils.config import Config
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -66,7 +57,6 @@ def get_dataloaders(first_n=None):
     train_images = get_images_from_folder(folder_name='304')
     if not train_images:
         logging.warning('Watch out! There are no data in the specific folder')
-        logging.critical('checjk')
         exit()
     if first_n is None:
         first_n = -int(0.2*len(train_images))  # 20% split ratio Train/Val
@@ -77,16 +67,36 @@ def get_dataloaders(first_n=None):
     set_determinism(seed=0)
 
     train_ds = CacheDataset(data=train_files, transform=train_transforms, cache_rate=0, num_workers=4)
-    # train_ds = Dataset(data=train_files, transform=train_transforms)
-    train_loader = DataLoader(train_ds, batch_size=3, shuffle=True, num_workers=4)
+    train_loader = DataLoader(train_ds, batch_size=2, shuffle=True, num_workers=4)
 
     return train_loader
 
 
-if __name__ == '__main__':
-    train_loader = get_dataloaders(first_n=2)
+def export_png_from_dcm(folder_name, project_path=None, first_n=None):
+    images = get_images_from_folder(folder_name=folder_name)
+    transform = transform_png()
 
-    check_data = first(train_loader)
-    print(check_data["image"].shape)
-    print(type(check_data["image"]))
-    save_image(check_data["image"], folder_name='mico')
+    counter = len(images)
+    if first_n is not None:
+        counter = first_n
+
+    for im in images:
+        imag = transform(im)
+        save_image(imag, folder_name=folder_name)
+        counter -= 1
+        if counter <= 0:
+            return
+    return
+
+
+if __name__ == '__main__':
+    
+    """get dataloader, get the first batch and then, save the list to the path"""
+    # train_loader = get_dataloaders(first_n=2)
+    # check_data = first(train_loader)
+    # print(check_data["image"].shape)
+    # print(type(check_data["image"]))
+    # save_images(check_data["image"], folder_name='mico')
+
+    """get files from path/folder name and then, save them under a specific configuration"""
+    # export_png_from_dcm(folder_name='304', first_n=2)

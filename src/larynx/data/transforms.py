@@ -9,6 +9,12 @@ from monai.transforms import (LoadImaged,
                               Spacingd,
                               )
 
+from monai.transforms import (LoadImage, 
+                              Resize, 
+                              Compose,
+                              ScaleIntensityRange,
+                              )
+
 
 def get_transforms():
     train_transforms = Compose(
@@ -57,3 +63,19 @@ def get_transforms():
     )
     return train_transforms, None
 
+def transform_png():
+
+    transform = Compose(
+        [
+            LoadImage(image_only=True, ensure_channel_first=True),
+            ScaleIntensityRange(
+                a_min=-200,
+                a_max=400,
+                b_min=0.0,
+                b_max=255.0,
+                clip=True,
+            ),
+            Resize(spatial_size=(512, 512, 1)),
+        ]
+    )
+    return transform
