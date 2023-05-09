@@ -20,6 +20,9 @@ endif
 # COMMANDS                                                                      #
 #################################################################################
 
+labstudio-start:
+	label-studio-ml start larynx-label-studio-backend
+
 ## Install Python Dependencies
 requirements: test_environment
 	$(PYTHON_INTERPRETER) -m pip install -U pip setuptools wheel
