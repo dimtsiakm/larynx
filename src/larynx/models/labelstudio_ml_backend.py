@@ -1,0 +1,1 @@
+from label_studio_ml.model import LabelStudioMLBase
