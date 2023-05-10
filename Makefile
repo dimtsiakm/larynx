@@ -21,7 +21,7 @@ endif
 #################################################################################
 
 labstudio-start:
-	label-studio-ml start larynx-label-studio
+	label-studio-ml start larynx-label-studio --debug
 
 ## Install Python Dependencies
 requirements: test_environment
