@@ -9,7 +9,7 @@ from monai.transforms import SaveImage
 from monai.data import CacheDataset, DataLoader, Dataset
 from monai.utils import first, set_determinism
 
-from larynx.data.transforms import get_transforms, transform_png
+from larynx.data.transforms import get_transforms, transforms_for_png
 from larynx.utils.config import Config
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -58,10 +58,14 @@ def get_dataloaders(first_n=None):
     if not train_images:
         logging.warning('Watch out! There are no data in the specific folder')
         exit()
+
+    data_dicts = [{"image": image_name, "label": label_name} for image_name, label_name in zip(train_images, train_images)]
     if first_n is None:
         first_n = -int(0.2*len(train_images))  # 20% split ratio Train/Val
-    data_dicts = [{"image": image_name, "label": label_name} for image_name, label_name in zip(train_images, train_images)]
-    train_files, val_files =  data_dicts[:first_n], data_dicts[first_n:]
+        train_files, val_files =  data_dicts[:first_n], data_dicts[first_n:]
+    else:
+        print("first n = " + str(first_n))
+        train_files, val_files =  data_dicts[:first_n], data_dicts[first_n:2*first_n]
 
     train_transforms, val_transforms = get_transforms()
     set_determinism(seed=0)
@@ -69,12 +73,15 @@ def get_dataloaders(first_n=None):
     train_ds = CacheDataset(data=train_files, transform=train_transforms, cache_rate=0, num_workers=4)
     train_loader = DataLoader(train_ds, batch_size=2, shuffle=True, num_workers=4)
 
-    return train_loader
+    val_ds = CacheDataset(data=val_files, transform=val_transforms, cache_rate=0, num_workers=4)
+    val_loader = DataLoader(val_ds, batch_size=1, shuffle=False, num_workers=0)
+
+    return train_loader, val_loader
 
 
 def export_png_from_dcm(folder_name, project_path=None, first_n=None):
     images = get_images_from_folder(folder_name=folder_name)
-    transform = transform_png()
+    transform = transforms_for_png()
 
     counter = len(images)
     if first_n is not None:
