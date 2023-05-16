@@ -1,5 +1,6 @@
 import monai
 import torch
+import cv2
 
 from monai.data import create_test_image_2d, list_data_collate, decollate_batch, DataLoader
 from monai.inferers import sliding_window_inference
@@ -16,9 +17,11 @@ from monai.transforms import (
 )
 
 from larynx.data.make_dataset import get_dataloaders
+from larynx.utils.config import Config
 
+from segment_anything import SamAutomaticMaskGenerator, sam_model_registry
 
-if __name__ == '__main__':
+def inference_save_img():
     train_dataloader, val_dataloader = get_dataloaders(first_n=5)
     post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
     saver = SaveImage(output_dir="./output", output_ext=".png", output_postfix="seg")
@@ -30,7 +33,6 @@ if __name__ == '__main__':
         channels=(16, 32, 64),
         strides=(2, 2),
     ).to(device)
-
 
     model.eval()
     with torch.no_grad():
@@ -61,3 +63,18 @@ if __name__ == '__main__':
                 plt.imshow(label)
                 plt.savefig('figure_1.png')
                 exit()
+
+def segment_anything():
+    config = Config()
+    img = cv2.imread(config.data_processed_path+'304/00010001_itk.png')
+
+    sam = sam_model_registry["vit_h"](checkpoint=config.models_path + 'sam/sam_vit_h_4b8939.pth')
+    mask_generator = SamAutomaticMaskGenerator(sam)
+    masks = mask_generator.generate(img)
+
+    
+    return
+
+if __name__ == '__main__':
+    # inference_save_img()
+    segment_anything()

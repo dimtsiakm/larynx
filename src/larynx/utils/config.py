@@ -8,6 +8,7 @@ class Config:
         self.data_processed_path = os.path.join(self.project_path, 'data/', 'processed/')
         self.figures_path = os.path.join(self.project_path, 'reports/figures/')
         self.temp_figures_path = os.path.join(self.project_path, 'reports/figures/temp/')
+        self.models_path = os.path.join(self.project_path, 'models/')
 
     def _get_root_path(self):
             return str(Path(__file__).resolve().parents[3])
