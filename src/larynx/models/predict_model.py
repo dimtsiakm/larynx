@@ -1,6 +1,8 @@
 import monai
 import torch
 import cv2
+import pickle
+import numpy as np
 
 from monai.data import create_test_image_2d, list_data_collate, decollate_batch, DataLoader
 from monai.inferers import sliding_window_inference
@@ -15,6 +17,8 @@ from monai.transforms import (
     SaveImage,
     ScaleIntensityd,
 )
+from monai.visualize import blend_images
+import matplotlib.pyplot as plt
 
 from larynx.data.make_dataset import get_dataloaders
 from larynx.utils.config import Config
@@ -64,15 +68,50 @@ def inference_save_img():
                 plt.savefig('figure_1.png')
                 exit()
 
-def segment_anything():
+def save_mask(filename, results):
+    with open(filename, "wb") as fp:   #Pickling
+            pickle.dump(results, fp)
+
+def load_mask(filename):
+    with open(filename, "rb") as fp:   # Unpickling
+            b = pickle.load(fp)
+            return b
+
+def segment_anything(use_model=False):
+
     config = Config()
-    img = cv2.imread(config.data_processed_path+'304/00010001_itk.png')
+    img = cv2.imread(config.data_processed_path+'304/00010001_itk.png', cv2.IMREAD_GRAYSCALE)
+    filename = config.join_data_path_with('interim/') + "masks.pickle"
 
-    sam = sam_model_registry["vit_h"](checkpoint=config.models_path + 'sam/sam_vit_h_4b8939.pth')
-    mask_generator = SamAutomaticMaskGenerator(sam)
-    masks = mask_generator.generate(img)
+    if use_model:
+        sam = sam_model_registry["vit_h"](checkpoint=config.models_path + 'sam/sam_vit_h_4b8939.pth')
+        mask_generator = SamAutomaticMaskGenerator(sam)
+        masks = mask_generator.generate(img)
+        save_mask(filename=filename, results=masks)
+        print("Exit program. The mask is saved completelly.")
+        return
 
+    masks = load_mask(filename=filename)
+    num_of_masks = len(masks)
     
+    for i, mask in enumerate(masks):
+        mask_image = mask['segmentation'].astype(int)
+        data_masked = np.ma.masked_where(mask_image == 0, mask_image)
+        plt.figure("check", (24, 12))
+        plt.subplot(1, 3, 1)
+        plt.title("image")
+        plt.imshow(img, cmap='gray')
+        plt.subplot(1, 3, 2)
+        plt.title("label")
+        plt.imshow(mask_image)
+        plt.subplot(1, 3, 3)
+        plt.title("ret")
+        plt.imshow(img, cmap='gray')
+        plt.imshow(data_masked, 'jet', interpolation='none', alpha=0.7)
+        plt.savefig('figure_'+str(i)+'.png')
+
+
+
     return
 
 if __name__ == '__main__':

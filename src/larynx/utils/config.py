@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+
 class Config:
     def __init__(self):
         self.seed = 555
@@ -9,6 +10,13 @@ class Config:
         self.figures_path = os.path.join(self.project_path, 'reports/figures/')
         self.temp_figures_path = os.path.join(self.project_path, 'reports/figures/temp/')
         self.models_path = os.path.join(self.project_path, 'models/')
+        self.data_path = os.path.join(self.project_path, 'data/')
 
     def _get_root_path(self):
             return str(Path(__file__).resolve().parents[3])
+    
+    def join_data_path_with(self, folder: str):
+         pth = os.path.join(self.data_path, folder)
+         if os.path.isdir(pth):
+            return pth
+         assert('The path is not valid; check the folder: ' + folder)
