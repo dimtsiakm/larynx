@@ -16,6 +16,8 @@ from monai.transforms import (LoadImage,
                               ScaleIntensityRange,
                               )
 
+from larynx.utils.config import Config
+
 def get_train_transforms():
     train_transforms = Compose(
         [
@@ -96,12 +98,14 @@ def get_transforms():
     return get_train_transforms(), get_val_transforms()
 
 def transforms_for_png():
+    config = Config()
+    min_ct, max_ct = config.get_ct_window_level()
     transform = Compose(
         [
             LoadImage(image_only=True, ensure_channel_first=True),
             ScaleIntensityRange(
-                a_min=-200,
-                a_max=400,
+                a_min=min_ct,
+                a_max=max_ct,
                 b_min=0.0,
                 b_max=255.0,
                 clip=True,

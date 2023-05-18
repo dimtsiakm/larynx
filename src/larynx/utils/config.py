@@ -12,6 +12,9 @@ class Config:
         self.models_path = os.path.join(self.project_path, 'models/')
         self.data_path = os.path.join(self.project_path, 'data/')
 
+        self.min_window_level = -155
+        self.max_window_level = 268
+
     def _get_root_path(self):
             return str(Path(__file__).resolve().parents[3])
     
@@ -20,3 +23,7 @@ class Config:
          if os.path.isdir(pth):
             return pth
          assert('The path is not valid; check the folder: ' + folder)
+
+    def get_ct_window_level(self):
+         print('CT window level: ', self.min_window_level, self.max_window_level)
+         return self.min_window_level, self.max_window_level
