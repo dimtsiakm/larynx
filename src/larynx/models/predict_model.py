@@ -3,6 +3,7 @@ import torch
 import cv2
 import pickle
 import numpy as np
+import os
 
 from monai.data import create_test_image_2d, list_data_collate, decollate_batch, DataLoader
 from monai.inferers import sliding_window_inference
@@ -77,46 +78,53 @@ def load_mask(filename):
             b = pickle.load(fp)
             return b
 
-def model_extract_masks(model, mask_name):
-    config = Config()
-    img = cv2.imread(config.data_processed_path+'304/00010001_itk.png')
-    filename = config.join_data_path_with('interim/') + mask_name
-
+def model_extract_masks(model, mask_name, img, filename):
     mask_generator = SamAutomaticMaskGenerator(model)
     masks = mask_generator.generate(img)
     save_mask(filename=filename, results=masks)
-    print("Exit program. The mask is saved completelly.")
+    print("mask is saved completelly.")
 
-def load_mask_and_visualize(filename):
+def load_mask_and_visualize(filename, model_name, img):
     config = Config()
     masks = load_mask(filename=filename)
-    img = cv2.imread(config.data_processed_path+'304/00010001_itk.png')
-    
+    print('mask loaded successfully')
+    rows = len(masks)
+    max_rows = rows
+    fig, ax = plt.subplots(max_rows, 3, sharex='col', sharey='row', figsize=(8, 2*rows), constrained_layout=True)
+    fig.suptitle('Model:' + model_name, fontsize=16)
+
     for i, mask in enumerate(masks):
+        if i >= max_rows:
+             break
         mask_image = mask['segmentation'].astype(int)
         data_masked = np.ma.masked_where(mask_image == 0, mask_image)
-        plt.figure("check", (24, 12))
-        plt.subplot(1, 3, 1)
-        plt.title("image")
-        plt.imshow(img, cmap='gray')
-        plt.subplot(1, 3, 2)
-        plt.title("label")
-        plt.imshow(mask_image)
-        plt.subplot(1, 3, 3)
-        plt.title("ret")
-        plt.imshow(img, cmap='gray')
-        plt.imshow(data_masked, 'jet', interpolation='none', alpha=0.7)
-        plt.savefig('figure_'+str(i)+'.png')
-    return
 
-def main():
+        ax[i,0].imshow(img, cmap='gray')
+        ax[i,1].imshow(mask_image)
+
+        ax[i,2].imshow(img, cmap='gray')
+        ax[i,2].imshow(data_masked, 'jet', interpolation='none', alpha=0.7)
+    fig.savefig(os.path.join(config.figures_path, 'temp', model_name) + '/figure_'+str(i)+'.png')
+
+def segment_anything():
     config = Config()
-    mask_name = 'medsam_00010001_itk.pickle'
-    filename = config.join_data_path_with('interim/') + mask_name
-    model = sam_model_registry["vit_b"](checkpoint=config.models_path + 'MedSAM/sam_vit_b_01ec64.pth')
-    model_extract_masks(model, mask_name)
-    load_mask_and_visualize(filename)
+    mask_name = 'masks_new.pickle'
+    model_name = 'sam'  # medsam
+    filename = config.join_data_path_with('interim/pickles/' + model_name + '/') + mask_name
+    img = cv2.imread(config.data_processed_path+'304/00010001_itk.png')
+
+    EXTRACT_MASKS = True
+
+    if EXTRACT_MASKS:
+        if model_name == 'medsam':
+            model = sam_model_registry["vit_b"](checkpoint=config.models_path + 'MedSAM/sam_vit_b_01ec64.pth')
+        elif model_name == 'sam':
+            model = sam_model_registry["vit_h"](checkpoint=config.models_path + 'sam/sam_vit_h_4b8939.pth')
+        else:
+            assert('model does not recognised')
+        model_extract_masks(model, mask_name, img, filename)
+
+    load_mask_and_visualize(filename, model_name, img)
 
 if __name__ == '__main__':
-    # inference_save_img()
-    main()
+    segment_anything()
