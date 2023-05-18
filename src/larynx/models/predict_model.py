@@ -77,22 +77,20 @@ def load_mask(filename):
             b = pickle.load(fp)
             return b
 
-def segment_anything(use_model=False):
-
+def model_extract_masks(model, mask_name):
     config = Config()
-    img = cv2.imread(config.data_processed_path+'304/00010001_itk.png', cv2.IMREAD_GRAYSCALE)
-    filename = config.join_data_path_with('interim/') + "masks.pickle"
+    img = cv2.imread(config.data_processed_path+'304/00010001_itk.png')
+    filename = config.join_data_path_with('interim/') + mask_name
 
-    if use_model:
-        sam = sam_model_registry["vit_h"](checkpoint=config.models_path + 'sam/sam_vit_h_4b8939.pth')
-        mask_generator = SamAutomaticMaskGenerator(sam)
-        masks = mask_generator.generate(img)
-        save_mask(filename=filename, results=masks)
-        print("Exit program. The mask is saved completelly.")
-        return
+    mask_generator = SamAutomaticMaskGenerator(model)
+    masks = mask_generator.generate(img)
+    save_mask(filename=filename, results=masks)
+    print("Exit program. The mask is saved completelly.")
 
+def load_mask_and_visualize(filename):
+    config = Config()
     masks = load_mask(filename=filename)
-    num_of_masks = len(masks)
+    img = cv2.imread(config.data_processed_path+'304/00010001_itk.png')
     
     for i, mask in enumerate(masks):
         mask_image = mask['segmentation'].astype(int)
@@ -109,11 +107,16 @@ def segment_anything(use_model=False):
         plt.imshow(img, cmap='gray')
         plt.imshow(data_masked, 'jet', interpolation='none', alpha=0.7)
         plt.savefig('figure_'+str(i)+'.png')
-
-
-
     return
+
+def main():
+    config = Config()
+    mask_name = 'medsam_00010001_itk.pickle'
+    filename = config.join_data_path_with('interim/') + mask_name
+    model = sam_model_registry["vit_b"](checkpoint=config.models_path + 'MedSAM/sam_vit_b_01ec64.pth')
+    model_extract_masks(model, mask_name)
+    load_mask_and_visualize(filename)
 
 if __name__ == '__main__':
     # inference_save_img()
-    segment_anything()
+    main()
