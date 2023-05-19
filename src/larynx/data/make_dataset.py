@@ -3,6 +3,7 @@ import os
 import sys
 import numpy as np
 import logging
+import re
 
 import SimpleITK as sitk  # noqa: N813
 from monai.transforms import SaveImage
@@ -14,7 +15,7 @@ from larynx.utils.config import Config
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
-def get_images_from_folder(project_path=None, folder_name='304'):
+def get_images_from_folder(project_path:str=None, folder_name:str=None):
     """ 
         Gets the data paths from data/raw/ + folder_name
     """
@@ -29,15 +30,21 @@ def get_images_from_folder(project_path=None, folder_name='304'):
 
     return train_images
 
+def find_caso_from(pth: str):
+    """extract CASO_# from path. Must be a folder, and then, return only the name"""
+    matches = re.search(r'/CASO_\d+/', pth)
+    caso_name = matches[0][1:-1]
+    return caso_name
 
 def save_image(image, folder_name):
     """Save image to data/processed/ + folder_name.
     """
+    caso_str = find_caso_from(folder_name)
     pth = os.path.join(Config().data_processed_path, folder_name)
     saver = SaveImage(
         output_dir=pth,
         output_ext=".png",
-        output_postfix="itk",
+        output_postfix=caso_str,
         output_dtype=np.uint8,
         resample=False,
         writer="ITKWriter",
@@ -106,4 +113,4 @@ if __name__ == '__main__':
     # save_images(check_data["image"], folder_name='mico')
 
     """get files from path/folder name and then, save them under a specific configuration"""
-    export_png_from_dcm(folder_name='larynx_dataset/CASO_2/25394775/5')
+    export_png_from_dcm(folder_name='larynx_dataset/CASO_4/37034650/550')

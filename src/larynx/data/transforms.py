@@ -19,14 +19,16 @@ from monai.transforms import (LoadImage,
 from larynx.utils.config import Config
 
 def get_train_transforms():
+    config = Config()
+    min_ct, max_ct = config.get_ct_window_level()
     train_transforms = Compose(
         [
             LoadImaged(keys=["image", "label"]),
             EnsureChannelFirstd(keys=["image", "label"]),
             ScaleIntensityRanged(
                 keys=["image"],
-                a_min=-200,
-                a_max=400,
+                a_min=min_ct,
+                a_max=max_ct,
                 b_min=0.0,
                 b_max=1.0,
                 clip=True,
@@ -51,14 +53,16 @@ def get_train_transforms():
     return train_transforms
 
 def get_val_transforms():
+    config = Config()
+    min_ct, max_ct = config.get_ct_window_level()
     val_transforms = Compose(
         [
             LoadImaged(keys=["image", "label"]),
             EnsureChannelFirstd(keys=["image", "label"]),
             ScaleIntensityRanged(
                 keys=["image"],
-                a_min=-200,
-                a_max=400,
+                a_min=min_ct,
+                a_max=max_ct,
                 b_min=0.0,
                 b_max=1.0,
                 clip=True,
@@ -73,14 +77,16 @@ def get_val_transforms():
     return val_transforms
 
 def get_inference_transforms():
+    config = Config()
+    min_ct, max_ct = config.get_ct_window_level()
     test_transforms = Compose(
         [
             LoadImaged(keys=["image"]),
             EnsureChannelFirstd(keys=["image"]),
             ScaleIntensityRanged(
                 keys=["image"],
-                a_min=-200,
-                a_max=400,
+                a_min=min_ct,
+                a_max=max_ct,
                 b_min=0.0,
                 b_max=1.0,
                 clip=True,
