@@ -1,34 +1,25 @@
-from label_studio_ml.model import LabelStudioMLBase
 import json
 import os
-import time
-
+import cv2
+import random
 import numpy as np
-import requests
-import torch
-import torch.nn as nn
-import torch.optim as optim
-from PIL import Image
-from torch.utils.data import DataLoader, Dataset
-from torchvision import models, transforms
 
 from label_studio_ml.model import LabelStudioMLBase
-from label_studio_ml.utils import (get_choice, get_env, get_local_path,
-                                   get_single_tag_keys, is_skipped)
+from label_studio_ml.utils import get_local_path, get_image_size
 
-from monai.handlers.utils import from_engine
-from monai.networks.nets import UNet, UNETR
-from monai.networks.layers import Norm
-from monai.metrics import DiceMetric
-from monai.losses import DiceLoss
-from monai.inferers import sliding_window_inference
-from monai.data import CacheDataset, DataLoader, Dataset, decollate_batch
-from monai.config import print_config
-from monai.apps import download_and_extract
-import random
+from label_studio_tools.core.utils.io import get_data_dir
 
+from larynx.utils.config import Config
+from larynx.models.predict_model import (load_sam_model, 
+                                         model_extract_masks, 
+                                         save_mask, 
+                                         load_mask, 
+                                         load_mask_and_visualize)
+from utils import produce_fake_data, extract_names_from_path, get_pickle_path
 # https://labelstud.io/playground : Label Studio tool playground!
 
+HOSTNAME = 'http://localhost:8080'
+API_KEY = 'a7da269601ff79cd1e28cc6161826d28134cd2dc'
 
 class LarynxSegmentator(LabelStudioMLBase):
 
@@ -41,16 +32,10 @@ class LarynxSegmentator(LabelStudioMLBase):
         self.logging_steps = logging_steps
         self.train_logs = train_logs
 
-        # then collect all keys from config which will be used to extract data from task and to form prediction
-        # Parsed label config contains only one output of <Choices> type
         assert len(self.parsed_label_config) == 1
         self.from_name, self.info = list(self.parsed_label_config.items())[0]
-        # print(self.from_name)
-        # print('-'*30)
-        # print(self.info)
         assert self.info['type'] == 'PolygonLabels'
 
-        # the model has only one textual input
         assert len(self.info['to_name']) == 1
         assert len(self.info['inputs']) == 1
         assert self.info['inputs'][0]['type'] == 'Image'
@@ -59,51 +44,60 @@ class LarynxSegmentator(LabelStudioMLBase):
         self.classes = ["Mucosa", "Cartilage", "Paraglottic Fat"]
 
 
-    def get_n_points(self, n):
-        list_of_points = []
-        x = random.random()*60
-        y = random.random()*60
-        step = 20  # percentage
-        for i in range(n):
-            if i < n/2:
-                x += random.random()*step
-                y += random.random()*step
-                list_of_points.append([x, y])
-            else:
-                x -= random.random()*step
-                y -= random.random()*step
-                list_of_points.append([x, y])
-        return list_of_points
-
-    def produce_fake_data(self, n=3):
-        results = []
-        for i in range(n):
-            n = random.randint(3, 8)
-            randon_class = self.classes[random.randint(0,2)]
-            random_points = self.get_n_points(n=n)
-            result = {
-                "value": {
-                    "points": random_points,
-                    "polygonlabels": [randon_class]
-                },
-                "original_width": 508,
-                "original_height": 508,
-                "image_rotation": 0,
-                "from_name": "label",
-                "to_name": "image",
-                "type": "polygonlabels"
-            }
-            results.append(result)
-        return results
-
-
     def predict(self, tasks, **kwargs):
         predictions = []
         n = random.randint(1, 3)
-        results = self.produce_fake_data(n=n)
-        # print(str(results))
+        results = produce_fake_data(n)
         
         predictions.append({'result': results, 'score': 0.55})
         
         return predictions
+
+
+import label_studio_sdk
+def download_tasks(project):
     
+    ls = label_studio_sdk.Client(HOSTNAME, API_KEY)
+    project = ls.get_project(id=project)
+    
+    task_ids = project.get_tasks_ids()
+    length = min(4, len(task_ids))
+    for i, id in enumerate(task_ids):
+        print(id)
+        if i > length:
+            return
+    project.create_prediction(task_ids[1], result=[], score=0.9)
+
+
+def inference(img_pth: str, model_str: str):
+    img_pth = get_local_path(img_pth)
+
+    img = cv2.imread(img_pth)
+    pickle_path = get_pickle_path(img_pth, model_str)
+
+    if os.path.isfile(pickle_path):
+        print('WARNING: This image has already been extracted')
+    model = load_sam_model(model_str)
+    masks = model_extract_masks(model, img)
+    return masks
+    save_mask(pickle_path, masks)
+    # load_mask_and_visualize(pickle_path, model_str, img)
+
+def export_polygons_from_masks(masks):
+    print(f'Total number of masks is {len(masks)}')
+    for mask in masks:
+        segmentation = mask['segmentation'].astype(np.uint8)
+        segmentation = segmentation*255
+        idx = cv2.findContours(segmentation, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        print(len(idx))
+        break
+    return
+
+
+    
+if __name__ == '__main__':
+    # provide_prediction_to_tasks()
+    img_pth = "/data/upload/1/3c78c00f-00010003_CASO_1.png"
+    pickle_pth = get_pickle_path(img_pth, 'sam')
+    masks = load_mask(pickle_pth)
+    export_polygons_from_masks(masks)
