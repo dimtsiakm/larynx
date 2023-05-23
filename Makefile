@@ -20,6 +20,9 @@ endif
 # COMMANDS                                                                      #
 #################################################################################
 
+create-predictions:
+	/home/dimitris/anaconda3/envs/larynx/bin/python /home/dimitris/Desktop/projects/larynx/larynx-label-studio/labelstudio_ml_backend.py
+
 labstudio-start:
 	label-studio-ml start larynx-label-studio --debug
 

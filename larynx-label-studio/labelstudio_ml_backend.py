@@ -69,35 +69,103 @@ def download_tasks(project):
     project.create_prediction(task_ids[1], result=[], score=0.9)
 
 
-def inference(img_pth: str, model_str: str):
-    img_pth = get_local_path(img_pth)
+def inference(img_pth: str, model_str: str, save_results: bool):
+    if not os.path.isfile(img_pth):
+        img_pth = get_local_path(img_pth)
 
     img = cv2.imread(img_pth)
     pickle_path = get_pickle_path(img_pth, model_str)
 
     if os.path.isfile(pickle_path):
         print('WARNING: This image has already been extracted')
+        return load_mask(pickle_path)
     model = load_sam_model(model_str)
     masks = model_extract_masks(model, img)
+    if save_results:
+        save_mask(pickle_path, masks)
     return masks
-    save_mask(pickle_path, masks)
-    # load_mask_and_visualize(pickle_path, model_str, img)
+
+
+def transform_pixels_to_percentage_polygons(polygons: list, width: int, height: int):
+    polygons_processed = []
+    for pol in polygons:
+        polygon_processed = transform_pixels_to_percentage(pol, width, height)
+        polygons_processed.append(polygon_processed)
+    return polygons_processed
+
+
+def transform_pixels_to_percentage(polygon: list, width: int, height: int):
+    polygon_percentage = []
+    for coord in polygon:
+        h, w = coord
+        h_perc, w_perc = h/height, w/width
+        h_perc, w_perc = h_perc*100, w_perc*100
+        polygon_percentage.append([h_perc,w_perc])
+    return polygon_percentage
+
 
 def export_polygons_from_masks(masks):
     print(f'Total number of masks is {len(masks)}')
+    polygons = []
     for mask in masks:
-        segmentation = mask['segmentation'].astype(np.uint8)
-        segmentation = segmentation*255
-        idx = cv2.findContours(segmentation, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        print(len(idx))
-        break
-    return
+        polygon = export_polygons_from_mask(mask)
+        polygons.append(polygon)
+    return polygons
 
 
+def export_polygons_from_mask(mask):
+    segmentation = mask['segmentation'].astype(np.uint8)
+    segmentation = segmentation*255
+    idxs = cv2.findContours(segmentation, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+    idxs = idxs[0][0]
+    coords = []
+    for idx in idxs:
+        coords.append(list(idx[0]))
+    return coords
+
+def prepare_data_for_upload(polygons: list):
+    results = []
+    for polygon in polygons:
+        result = {
+            "value": {
+                "points": polygon,
+                "polygonlabels": ["Mucosa"]
+            },
+            "image_rotation": 0,
+            "from_name": "label",
+            "to_name": "image",
+            "type": "polygonlabels"
+        }
+        results.append(result)
+    return results
+
+
+def make_predictions_dataset(first_n:int=None):
+    EARLY_STOP = False
+    if first_n is not None:
+        EARLY_STOP = True
+
+    model_version = 'SAM-23.05.23'
+    ls = label_studio_sdk.Client(HOSTNAME, API_KEY)
+    project = ls.get_project(id=1)
+    tasks_id = project.get_tasks_ids()
     
+    for i, task_id in enumerate(tasks_id):
+        if EARLY_STOP:
+            if i >= first_n:
+                return
+        print(f'Task {task_id} is processing...')
+        task = project.get_task(task_id)
+        img_pth = task['data']['image']
+        img_pth = get_local_path(img_pth)
+        width, height = get_image_size(img_pth)
+        masks = inference(img_pth, model_version, save_results=True)
+        polygons = export_polygons_from_masks(masks)
+        polygons = transform_pixels_to_percentage_polygons(polygons, width, height)
+        results = prepare_data_for_upload(polygons)
+        project.create_prediction(task_id, result=results, score=0.5, model_version=model_version)
+        print('prediction uploaded successfully')
+   
 if __name__ == '__main__':
-    # provide_prediction_to_tasks()
-    img_pth = "/data/upload/1/3c78c00f-00010003_CASO_1.png"
-    pickle_pth = get_pickle_path(img_pth, 'sam')
-    masks = load_mask(pickle_pth)
-    export_polygons_from_masks(masks)
+    make_predictions_dataset(first_n=None)

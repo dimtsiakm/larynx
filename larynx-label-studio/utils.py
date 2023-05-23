@@ -52,7 +52,10 @@ def get_pickle_path(img_pth: str, model_str: str):
     config = Config()
     _, img_name = extract_names_from_path(img_pth)
     mask_name = f'masks_{img_name}.pickle'
-    pickle_path = config.join_data_path_with(f'interim/pickles/{model_str}/') + mask_name
-    if os.path.isfile(pickle_path):
-        return pickle_path
-    return None
+
+    pickle_path = os.path.join(config.data_path, 'interim/pickles', model_str)
+    os.makedirs(pickle_path, exist_ok=True)
+    if os.path.isdir(pickle_path):
+        return os.path.join(pickle_path, mask_name)
+    else:
+        assert('pickle path is not correct')

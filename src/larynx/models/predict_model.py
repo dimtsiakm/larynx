@@ -114,11 +114,11 @@ def load_mask_and_visualize(filename: str, model_name: str, img: np.ndarray):
     print(f'figure saved at: {pth}')
 
 def load_sam_model(model_name: str):
-    """possible values are sam, medsam"""
+    """possible values are SAM-23.05.23, MedSAM-23.05.23, ..."""
     config = Config()
-    if model_name == 'medsam':
+    if model_name == 'MedSAM-23.05.23':
         model = sam_model_registry["vit_b"](checkpoint=config.models_path + 'MedSAM/sam_vit_b_01ec64.pth')
-    elif model_name == 'sam':
+    elif model_name == 'SAM-23.05.23':
         model = sam_model_registry["vit_h"](checkpoint=config.models_path + 'sam/sam_vit_h_4b8939.pth')
     else:
         assert('model does not recognised')
