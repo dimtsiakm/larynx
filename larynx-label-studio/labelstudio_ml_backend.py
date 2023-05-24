@@ -140,13 +140,28 @@ def prepare_data_for_upload(polygons: list):
         results.append(result)
     return results
 
+def there_are_predictions_from(model: str, task):
+    predictions = task['predictions']
+    for prediction in predictions:
+        if prediction['model_version'] == model:
+            return True
+    return False
 
-def make_predictions_dataset(first_n:int=None):
+
+def make_predictions_dataset(first_n:int=None, upload_masks:bool=False, filter_out:bool=True):
     EARLY_STOP = False
     if first_n is not None:
         EARLY_STOP = True
+    
+    if not upload_masks:
+        print('The procedure will not upload the results..')
 
     model_version = 'SAM-23.05.23'
+    if filter_out:
+        model_version_str = f'{model_version}-filtered-out'
+    else:
+        model_version_str = model_version
+
     ls = label_studio_sdk.Client(HOSTNAME, API_KEY)
     project = ls.get_project(id=1)
     tasks_id = project.get_tasks_ids()
@@ -157,15 +172,22 @@ def make_predictions_dataset(first_n:int=None):
                 return
         print(f'Task {task_id} is processing...')
         task = project.get_task(task_id)
+        
+        if there_are_predictions_from(model_version_str, task):
+            print('This task is skipped because predictions from this model has already been uploaded.')
+            continue
         img_pth = task['data']['image']
         img_pth = get_local_path(img_pth)
         width, height = get_image_size(img_pth)
         masks = inference(img_pth, model_version, save_results=True)
+        
         polygons = export_polygons_from_masks(masks)
         polygons = transform_pixels_to_percentage_polygons(polygons, width, height)
         results = prepare_data_for_upload(polygons)
-        project.create_prediction(task_id, result=results, score=0.5, model_version=model_version)
-        print('prediction uploaded successfully')
+        if upload_masks:
+            project.create_prediction(task_id, result=results, score=0.5, model_version=model_version_str)
+            print('prediction uploaded successfully')
+        
    
 if __name__ == '__main__':
-    make_predictions_dataset(first_n=None)
+    make_predictions_dataset(first_n=None, upload_masks=False, filter_out=False)
