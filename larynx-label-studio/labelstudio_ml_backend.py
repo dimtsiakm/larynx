@@ -10,12 +10,14 @@ from label_studio_ml.utils import get_local_path, get_image_size
 from label_studio_tools.core.utils.io import get_data_dir
 
 from larynx.utils.config import Config
+from larynx.models.utils import retrive_binary_filter_imaging
 from larynx.models.predict_model import (load_sam_model, 
                                          model_extract_masks, 
                                          save_mask, 
                                          load_mask, 
                                          load_mask_and_visualize)
 from utils import produce_fake_data, extract_names_from_path, get_pickle_path
+
 # https://labelstud.io/playground : Label Studio tool playground!
 
 HOSTNAME = 'http://localhost:8080'
@@ -147,6 +149,16 @@ def there_are_predictions_from(model: str, task):
             return True
     return False
 
+def masks_filtering(masks: list, square_length: int):
+    results = []
+    width, height = masks[0]['segmentation'].shape
+    mask_filter = retrive_binary_filter_imaging(width, height, square_length)
+    for mask in masks:
+        mask_array = mask['segmentation']
+        logical_and_array = np.logical_and(mask_array, mask_filter)
+        if (mask_array == logical_and_array).all() and mask_array.sum() > 250:
+            results.append(mask)
+    return results
 
 def make_predictions_dataset(first_n:int=None, upload_masks:bool=False, filter_out:bool=True):
     EARLY_STOP = False
@@ -156,7 +168,7 @@ def make_predictions_dataset(first_n:int=None, upload_masks:bool=False, filter_o
     if not upload_masks:
         print('The procedure will not upload the results..')
 
-    model_version = 'SAM-23.05.23'
+    model_version = 'MedSAM-23.05.23'
     if filter_out:
         model_version_str = f'{model_version}-filtered-out'
     else:
@@ -165,7 +177,7 @@ def make_predictions_dataset(first_n:int=None, upload_masks:bool=False, filter_o
     ls = label_studio_sdk.Client(HOSTNAME, API_KEY)
     project = ls.get_project(id=1)
     tasks_id = project.get_tasks_ids()
-    
+
     for i, task_id in enumerate(tasks_id):
         if EARLY_STOP:
             if i >= first_n:
@@ -180,7 +192,8 @@ def make_predictions_dataset(first_n:int=None, upload_masks:bool=False, filter_o
         img_pth = get_local_path(img_pth)
         width, height = get_image_size(img_pth)
         masks = inference(img_pth, model_version, save_results=True)
-        
+        if filter_out:
+            masks = masks_filtering(masks, square_length=350)
         polygons = export_polygons_from_masks(masks)
         polygons = transform_pixels_to_percentage_polygons(polygons, width, height)
         results = prepare_data_for_upload(polygons)
@@ -188,6 +201,6 @@ def make_predictions_dataset(first_n:int=None, upload_masks:bool=False, filter_o
             project.create_prediction(task_id, result=results, score=0.5, model_version=model_version_str)
             print('prediction uploaded successfully')
         
-   
+
 if __name__ == '__main__':
-    make_predictions_dataset(first_n=None, upload_masks=False, filter_out=False)
+    make_predictions_dataset(first_n=None, upload_masks=True, filter_out=True)
