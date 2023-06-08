@@ -10,7 +10,7 @@ from monai.transforms import SaveImage
 from monai.data import CacheDataset, DataLoader, Dataset
 from monai.utils import first, set_determinism
 
-from larynx.data.transforms import get_transforms, transforms_for_png
+from larynx.models.transforms import get_transforms, transforms_for_png
 from larynx.utils.config import Config
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
