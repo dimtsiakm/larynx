@@ -113,4 +113,4 @@ if __name__ == '__main__':
     # save_images(check_data["image"], folder_name='mico')
 
     """get files from path/folder name and then, save them under a specific configuration"""
-    export_png_from_dcm(folder_name='larynx_dataset/CASO_4/37034650/550')
+    # export_png_from_dcm(folder_name='larynx_dataset/CASO_4/37034650/550')
