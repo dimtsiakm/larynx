@@ -15,6 +15,8 @@ class Config:
         self.min_window_level = -155
         self.max_window_level = 268
 
+        self.roi_2d = [96, 96]
+
     def _get_root_path(self):
             return str(Path(__file__).resolve().parents[3])
     
