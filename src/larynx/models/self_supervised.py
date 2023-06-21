@@ -173,7 +173,7 @@ patch_ds_val = PatchDataset(
     samples_per_image=num_samples,
 )
 
-batch_size = 32
+batch_size = 16
 train_loader = DataLoader(
     patch_ds_train,
     batch_size=batch_size,
