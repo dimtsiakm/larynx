@@ -18,11 +18,13 @@ def save_image(gt, input, result, name):
     plt.savefig(pth)
 
 model, device = get_model()
-load_model = torch.load('models/ViT/best_model_500_epochs.pt')
+load_model = torch.load('models/ViT/best_model_23_06_2023.pt')
 model.load_state_dict(load_model["state_dict"])
 
 
 print(f'The model loaded.. Best epoch of {load_model["epoch"]}')
+print(f'Trained for {load_model["max_epochs"]}.')
+exit()
 ###########################################
 
 train_loader, val_loader, _ = get_dataloaders()
