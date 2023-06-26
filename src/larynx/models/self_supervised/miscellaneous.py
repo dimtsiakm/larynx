@@ -1,14 +1,7 @@
-import os
-import json
-import time
 import torch
-import matplotlib.pyplot as plt
-from torch.nn import L1Loss
 from monai.utils import set_determinism, first
-from monai.networks.nets import ViTAutoEnc
-from monai.losses import ContrastiveLoss
-from monai.data import DataLoader, Dataset
-from monai.config import print_config
+from monai.networks.nets import ViTAutoEnc, UNet
+from monai.data import DataLoader
 from monai.transforms import (
     LoadImaged,
     Compose,
@@ -31,29 +24,21 @@ from monai.transforms import (
     ScaleIntensityd,
     SqueezeDimd,
 )
-from glob import glob
-import shutil
 
-import matplotlib.pyplot as plt
-import monai
-import nibabel as nib
-import numpy as np
 import torch
 from monai.data import DataLoader, CacheDataset, PatchDataset, create_test_image_3d
 
-from monai.visualize import matshow3d
-
 from larynx.data.make_dataset_niftii import get_images
-from larynx.models.transforms import get_self_supervised_transforms
 from larynx.utils.config import Config
 
 set_determinism(seed=123)
 
-def get_dataloaders(batch_size=16, num_samples=8, num_of_patches_per_slice=4):
+def get_dataloaders(DEBUG_MODE, batch_size=16, num_samples=8, num_of_patches_per_slice=4):
     print(f'Total batch size: {batch_size*num_of_patches_per_slice}')
     train, val = get_images(percentge=0.7)
-    # train = train[:10]
-    # val = val[:1]
+    if DEBUG_MODE:
+        train = train[:1]
+        val = val[:1]
 
     print(len(train), len(val), len(train)+len(val))
     config = Config()

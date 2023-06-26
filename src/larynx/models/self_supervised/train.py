@@ -1,51 +1,16 @@
 import os
-import json
 import time
 import torch
 import matplotlib.pyplot as plt
 from torch.nn import L1Loss
 from monai.utils import set_determinism, first
-from monai.networks.nets import ViTAutoEnc
 from monai.losses import ContrastiveLoss
-from monai.data import DataLoader, Dataset
-from monai.config import print_config
-from monai.transforms import (
-    LoadImaged,
-    Compose,
-    CropForegroundd,
-    CopyItemsd,
-    SpatialPadd,
-    EnsureChannelFirstd,
-    Spacingd,
-    OneOf,
-    ScaleIntensityRanged,
-    RandSpatialCropSamplesd,
-    RandCoarseDropoutd,
-    RandCoarseShuffled,
-    Compose,
-    EnsureChannelFirstd,
-    EnsureTyped,
-    LoadImaged,
-    RandRotate90d,
-    Resized,
-    ScaleIntensityd,
-    SqueezeDimd,
-)
-from glob import glob
-import shutil
 
 import matplotlib.pyplot as plt
-import monai
-import nibabel as nib
 import numpy as np
 import torch
-from monai.data import DataLoader, CacheDataset, PatchDataset, create_test_image_3d
 
-from monai.visualize import matshow3d
-
-from larynx.data.make_dataset_niftii import get_images
 from larynx.models.self_supervised.miscellaneous import get_dataloaders, get_model
-from larynx.utils.config import Config
 
 set_determinism(seed=123)
 
@@ -85,13 +50,12 @@ def save_augmentations(train_loader):
             plt.savefig(pth)
             counter += 1
 
-
 train_loader, val_loader, patch_ds_train_len = get_dataloaders()
 
 model, device = get_model()
 
 # Define Hyper-paramters for training loop
-max_epochs = 600
+max_epochs = 500
 val_interval = 2
 lr = 1e-4
 epoch_loss_values = []
@@ -190,22 +154,22 @@ for epoch in range(max_epochs):
             torch.save(checkpoint, os.path.join("models/ViT", "best_model.pt"))
 
         plt.figure(1, figsize=(8, 8))
-        plt.subplot(2, 2, 1)
+        plt.subplot(4, 1, 1)
         plt.plot(epoch_loss_values)
         plt.grid()
         plt.title("Training Loss")
 
-        plt.subplot(2, 2, 2)
+        plt.subplot(4, 1, 2)
         plt.plot(val_loss_values)
         plt.grid()
         plt.title("Validation Loss")
 
-        plt.subplot(2, 2, 3)
+        plt.subplot(4, 1, 3)
         plt.plot(epoch_cl_loss_values)
         plt.grid()
         plt.title("Training Contrastive Loss")
 
-        plt.subplot(2, 2, 4)
+        plt.subplot(4, 1, 4)
         plt.plot(epoch_recon_loss_values)
         plt.grid()
         plt.title("Training L1 Loss")
