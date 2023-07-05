@@ -1,7 +1,23 @@
 larynx
 ==============================
-
 A medical imaging segmentation using DECT dataset
+==============================
+
+We are going to present some basic functionalities in this project:
+
+# Self-supervised learning
+
+directory > src/larynx/models/self_supervised/
+#### denoise an image using autoencoders
+
+train.py => load train and validation data loaders from miscellaneous.py file. Especially, they load a 3D raw volume and with the help of transformations, load dataloaders with 2D patches of 96x96 pixels. 
+
+Then, get a NN model and load the necessities, such as L1 and Contrastive losses. Adam optimizer is used, while the max epochs variable is defined equal to 500 with validation interval of twice. A typical pytorch loop is implemented using the two augmented patches, as well as the ground truth image. When the loop is finished, a figure with the convergence graph is saved. 
+
+inference.py => makes an inference of 2D patches. 
+
+==============================
+
 
 Project Organization
 ------------
