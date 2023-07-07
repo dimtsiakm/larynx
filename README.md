@@ -16,6 +16,8 @@ Then, get a NN model and load the necessities, such as L1 and Contrastive losses
 
 inference.py => makes an inference of 2D patches. 
 
+test
+
 ==============================
 
 
