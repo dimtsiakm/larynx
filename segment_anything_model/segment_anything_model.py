@@ -15,7 +15,6 @@ from onnxruntime.quantization import QuantType
 from onnxruntime.quantization.quantize import quantize_dynamic
 
 
-<<<<<<< HEAD
 def prepare_data_for_upload(polygon: list):
     results = []
     result = {
@@ -53,8 +52,6 @@ def export_polygons_from_mask(mask):
     
     return coords
 
-=======
->>>>>>> 92afc8c19dd81bf0180c094c78456a05e397024c
 VITH_CHECKPOINT = os.environ.get("VITH_CHECKPOINT", "sam_vit_h_4b8939.pth")
 ONNX_CHECKPOINT = os.environ.get("ONNX_CHECKPOINT", "sam_onnx_quantized_example.onnx")
 
@@ -101,13 +98,8 @@ class MyModel(LabelStudioMLBase):
         predictor = PREDICTOR
 
         image_url = tasks[0]['data']['image']
-<<<<<<< HEAD
         # print(f"the kwargs are {kwargs}")
         # print(f"the tasks are {tasks}")
-=======
-        print(f"the kwargs are {kwargs}")
-        print(f"the tasks are {tasks}")
->>>>>>> 92afc8c19dd81bf0180c094c78456a05e397024c
 
 
         # getting the height and width of the image that you are annotating real-time 
@@ -174,75 +166,9 @@ class MyModel(LabelStudioMLBase):
         masks = masks > predictor.model.mask_threshold
 
         mask = masks[0, 0, :, :].astype(np.uint8) # each mask has shape [H, W]
-<<<<<<< HEAD
         polygon = export_polygons_from_mask(mask)
         polygon = transform_pixels_to_percentage(polygon, width, height)
         results = prepare_data_for_upload(polygon)
-=======
-
-        adjusted_masks = []
-
-        # check if SAM eraser is being used
-        if 'Eraser' in keypointlabel:
-            prev_rle = []
-            previous_id = []
-            type = " ".join(keypointlabel.split()[:-1])
-            indexes = np.nonzero(mask)
-
-            for i in tasks[0]['drafts']:
-                if tasks[0]['drafts'][0]['result'][0]['value']['brushlabels'][0] == type:
-                    prev_rle.append(tasks[0]['drafts'][0]['result'][0]['value']['rle'])
-
-            prev_mask = brush.decode_rle(prev_rle[-1])
-            prev_mask = np.reshape(prev_mask, [height, width, 4])[:, :, 3]
-            prev_mask = (prev_mask/255).astype(np.uint8)
-
-            indices = np.logical_and(mask == 1, prev_mask == 1)
-            prev_mask[indices] = 0
-                        
-            rle_resubmit = prev_mask * 255
-            rle_resubmit = brush.mask2rle(rle_resubmit)
-            adjusted_masks.append(rle_resubmit)
-            
-            results.append({
-                "from_name": self.from_name,
-                "to_name": self.to_name,
-                "original_width": width,
-                "original_height": height,
-                "image_rotation": 0,
-                "value": {
-                    "format": "rle",
-                    "rle": adjusted_masks[0],
-                    "brushlabels": [type],
-                },
-                "type": "brushlabels",
-                "id": ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.ascii_lowercase + string.digits)), # creates a random ID for your label everytime so no chance for errors,
-                "readonly": False,
-            })
-        else:
-            label_id = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.ascii_lowercase + string.digits)), # creates a random ID for your label everytime so no chance for errors
-            
-            # converting the mask from the model to RLE format which is usable in Label Studio
-            mask = mask * 255
-            rle = brush.mask2rle(mask)
-            results.append({
-                "from_name": self.from_name,
-                "to_name": self.to_name,
-                "original_width": width,
-                "original_height": height,
-                "image_rotation": 0,
-                "value": {
-                    "format": "rle",
-                    "rle": rle,
-                    "brushlabels": [label],
-                },
-                "type": "brushlabels",
-                "id": label_id,
-                "readonly": False,
-            })
-
-        # returning the result from the prediction and passing it to show on the front-end
->>>>>>> 92afc8c19dd81bf0180c094c78456a05e397024c
         predictions.append({"result": results,
                             "model_version": "vit_h"
         })
