@@ -91,3 +91,6 @@ target/
 # ignore temporary files
 *temp/
 /models/
+segment_anything_model/sam_vit_h_4b8939.pth
+segment_anything_model/sam_onnx_quantized_example.onnx
+segment_anything_model/sam_onnx_example.onnx
