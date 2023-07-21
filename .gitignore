@@ -94,3 +94,4 @@ target/
 sam_vit_h_4b8939.pth
 sam_onnx_quantized_example.onnx
 sam_onnx_example.onnx
+my-label-studio-ml-backends/segment_anything_model/*/
