@@ -8,7 +8,7 @@ import os
 from monai.visualize import blend_images
 import matplotlib.pyplot as plt
 
-from larynx.data.make_dataset_dcm import get_dataloaders
+from larynx.data.prepare_dataset_for_annotation_dcm import get_dataloaders
 from larynx.utils.config import Config
 
 from segment_anything import SamAutomaticMaskGenerator, sam_model_registry
