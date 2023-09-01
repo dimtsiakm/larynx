@@ -104,13 +104,5 @@ def export_png_from_dcm(folder_name, project_path=None, first_n=None):
 
 
 if __name__ == '__main__':
-    
-    """get dataloader, get the first batch and then, save the list to the path"""
-    # train_loader = get_dataloaders(first_n=2)
-    # check_data = first(train_loader)
-    # print(check_data["image"].shape)
-    # print(type(check_data["image"]))
-    # save_images(check_data["image"], folder_name='mico')
-
     """get files from path/folder name and then, save them under a specific configuration"""
     # export_png_from_dcm(folder_name='larynx_dataset/CASO_4/37034650/550')
