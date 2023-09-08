@@ -52,7 +52,7 @@ def export_polygons_from_mask(mask):
     
     return coords
 
-VITH_CHECKPOINT = os.environ.get("VITH_CHECKPOINT", "sam_vit_h_4b8939.pth")
+VITH_CHECKPOINT = os.environ.get("VITH_CHECKPOINT", "/home/dimitris.tsiakmakis/projects/larynx/models/sam/sam_vit_h_4b8939.pth")
 ONNX_CHECKPOINT = os.environ.get("ONNX_CHECKPOINT", "sam_onnx_quantized_example.onnx")
 
 def load_my_model():

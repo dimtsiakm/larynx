@@ -7,13 +7,9 @@ import onnxruntime
 from onnxruntime.quantization import QuantType
 from onnxruntime.quantization.quantize import quantize_dynamic
 
-<<<<<<< HEAD
-VITH_CHECKPOINT = os.environ.get("VITH_CHECKPOINT", "label_studio_ml/examples/segment_anything_model/sam_vit_h_4b8939.pth")
-=======
-VITH_CHECKPOINT = os.environ.get("VITH_CHECKPOINT", "sam_vit_h_4b8939.pth")
->>>>>>> 92afc8c19dd81bf0180c094c78456a05e397024c
-
-sam = sam_model_registry["vit_h"](checkpoint=VITH_CHECKPOINT)
+VITH_CHECKPOINT = os.environ.get("VITH_CHECKPOINT", "models/sam/sam_vit_h_4b8939.pth")
+checkpoint = "/home/dimitris.tsiakmakis/projects/larynx/models/sam/sam_vit_h_4b8939.pth"
+sam = sam_model_registry["vit_h"](checkpoint=checkpoint)
 
 onnx_model_path = "sam_onnx_example.onnx"
 
@@ -33,7 +29,7 @@ dummy_inputs = {
     "point_labels": torch.randint(low=0, high=4, size=(1, 5), dtype=torch.float),
     "mask_input": torch.randn(1, 1, *mask_input_size, dtype=torch.float),
     "has_mask_input": torch.tensor([1], dtype=torch.float),
-    "orig_im_size": torch.tensor([1500, 2250], dtype=torch.float),
+    "orig_im_size": torch.tensor([512, 512], dtype=torch.float),
 }
 output_names = ["masks", "iou_predictions", "low_res_masks"]
 

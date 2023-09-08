@@ -1,32 +1,36 @@
-larynx
+Artificial Larynx project
 ==============================
 A medical imaging segmentation using DECT dataset
-==============================
+
+# Setup
+
+1. clone this repo: git clone --recurse-submodules -j8 git://github.com/foo/bar.git
+2. pip install -e . (both in label-studio-ml-backend and larynx)
+3. ready
+
+# Label Studio ML backend
+
+Make use of Segment Anything Model (SAM) as a backend model
+
+1. label-studio start (version==1.7.3, python==3.9)
+2. ngrok (follow the instructions on the website: https://labelstud.io/guide/start) 
+3. SAM: my-label-studio-ml-backends/segment_anything_model
+>To run SAM as backend follow the instructions here: https://github.com/HumanSignal/label-studio-ml-backend/tree/master. 
+run once the onnxconverter.py file to produce the .onnx file.
+
+
+### Self-supervised learning
 
 We are going to present some basic functionalities in this project:
-
-# Self-supervised learning
-
 directory > src/larynx/models/self_supervised/
-#### denoise an image using autoencoders
+denoise an image using autoencoders
 
 train.py => load train and validation data loaders from miscellaneous.py file. Especially, they load a 3D raw volume and with the help of transformations, load dataloaders with 2D patches of 96x96 pixels. 
 
 Then, get a NN model and load the necessities, such as L1 and Contrastive losses. Adam optimizer is used, while the max epochs variable is defined equal to 500 with validation interval of twice. A typical pytorch loop is implemented using the two augmented patches, as well as the ground truth image. When the loop is finished, a figure with the convergence graph is saved. 
 
-inference.py => makes an inference of 2D patches. 
+inference.py => makes an inference of 2D patches.
 
-==============================
-
-# Label Studio ML backend
-
-#### Make use of Segment Anything Model (SAM) as a backend model
-
-1. label-studio start
-2. ngrok (follow the instructions on the website: https://labelstud.io/guide/start) 
-3. SAM: my-label-studio-ml-backends/segment_anything_model
-
-==============================
 
 
 Project Organization
