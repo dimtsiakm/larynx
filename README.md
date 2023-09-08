@@ -16,7 +16,15 @@ Then, get a NN model and load the necessities, such as L1 and Contrastive losses
 
 inference.py => makes an inference of 2D patches. 
 
-test
+==============================
+
+# Label Studio ML backend
+
+#### Make use of Segment Anything Model (SAM) as a backend model
+
+1. label-studio start
+2. ngrok (follow the instructions on the website: https://labelstud.io/guide/start) 
+3. SAM: my-label-studio-ml-backends/segment_anything_model
 
 ==============================
 
