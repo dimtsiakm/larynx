@@ -4,7 +4,7 @@ A medical imaging segmentation using DECT dataset
 
 # Setup
 
-1. clone this repo: git clone --recurse-submodules -j8 git://github.com/foo/bar.git
+1. clone this repo using the following command: git clone --recurse-submodules -j8 https://github.com/dimtsiakm/larynx.git
 2. pip install -e . (both in label-studio-ml-backend and larynx)
 3. ready
 
@@ -12,11 +12,14 @@ A medical imaging segmentation using DECT dataset
 
 Make use of Segment Anything Model (SAM) as a backend model
 
+0. conda activate test_env
 1. label-studio start (version==1.7.3, python==3.9)
 2. ngrok (follow the instructions on the website: https://labelstud.io/guide/start) 
 3. SAM: my-label-studio-ml-backends/segment_anything_model
 >To run SAM as backend follow the instructions here: https://github.com/HumanSignal/label-studio-ml-backend/tree/master. 
 run once the onnxconverter.py file to produce the .onnx file.
+
+(test_env conda) > python3 onnxconverter.py
 
 
 ### Self-supervised learning
