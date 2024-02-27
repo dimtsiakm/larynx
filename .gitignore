@@ -88,9 +88,15 @@ target/
 # Mypy cache
 .mypy_cache/
 
+
+*.onnx
+
 # ignore temporary files
 *temp/
 /models/
+# ignore temp folders which are made by numbers only.
+[0-9]*/
+
 # sam_vit_h_4b8939.pth
 # sam_onnx_quantized_example.onnx
 # sam_onnx_example.onnx

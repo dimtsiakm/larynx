@@ -11,13 +11,24 @@ A medical imaging segmentation using DECT dataset
 # Label Studio ML backend
 
 Make use of Segment Anything Model (SAM) as a backend model
+USE the test_env conda environment.
 
 0. conda activate test_env
 1. label-studio start (version==1.7.3, python==3.9)
-2. ngrok (follow the instructions on the website: https://labelstud.io/guide/start) 
+2. ngrok (follow the instructions on the website: https://labelstud.io/guide/start)
+> If this is your first time running it, authenticate the ngrock (ngrok config add-authtoken <Your token>)
+> Start ngrok and point it at Label Studio: ngrok http --host-header=rewrite 8080
+
+
 3. SAM: my-label-studio-ml-backends/segment_anything_model
 >To run SAM as backend follow the instructions here: https://github.com/HumanSignal/label-studio-ml-backend/tree/master. 
-run once the onnxconverter.py file to produce the .onnx file.
+run once the onnxconverter.py file to produce the .onnx file and then:
+
+cd my-label-studio-ml-backends/segment_anything_model
+python3 onnxconverter.py
+label-studio-ml start . -p 9091
+
+4. DONE. Everything has been set up.
 
 (test_env conda) > python3 onnxconverter.py
 
